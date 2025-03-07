@@ -22,7 +22,7 @@
 
 ## 00. DATA 1901 Command-Line Python script automation
 
-==R, Python, Zsh command-line, web-scrapping, graphical analysis, regression analysis, report writing==
+**R, Python, Zsh command-line, web-scrapping, graphical analysis, regression analysis, report writing**
 
 ```
 .
@@ -44,7 +44,7 @@
 
 ## 01. ECON 302 HW2ExploringModel.pdf
 
-==R, graphical analysis, macroeconomic analysis==
+**R, graphical analysis, macroeconomic analysis**
 
 In this assignment, I drew real GDP, labour stock, and total working hours from the FRED (St. Louis Federal Reserve) [database](https://fred.stlouisfed.org/series) to plot the Solow residuals. I also examined the years required for Indonesia and Malaysia to catch up with Belgium's GDP per capita by using the neoclassical economic model and data from [Maddison data](https://www.rug.nl/ggdc/historicaldevelopment/maddison/?lang=en)
 
@@ -52,7 +52,9 @@ In this assignment, I drew real GDP, labour stock, and total working hours from 
 
 ## 02. ECON 326 Final Project
 
-==R, regression analysis, model specification check, model robustness check, report writing==
+**R, regression analysis, model specification check, model robustness check, report writing**
+
+**Result: obtained an 83% on this project**
 
 In this assignment, I investigated the relationship between neighbourhood income levels and the number of cultural spaces in a disseminated area (DA is the fundamental unit of analysis in StatsCan data). I drew data from Statistics Canada and performed data point and DA matching. I further wrote a highly motivating literature summary of the current academic evidence on the subject. It is followed by regression analysis and model checks.
 
@@ -60,36 +62,38 @@ In this assignment, I investigated the relationship between neighbourhood income
 
 ## 03. POLI 101 Final Paper final v
 
-==Clear and succinct report writing, research==
+**Clear and succinct report writing, research**
+
+**Result: obtained a 97% on the final paper**
 
 In this paper, I qualified the success of the senate reform of PM Justin Trudeau. I neatly synthesized four pages of well-researched  references and performed analysis on a range of viewpoints of his reform legacy.
 
 ## 04. Moot Court 2025 UBC
 
-==Legal report writing, legal research on CanLii==
+**Legal report writing, legal research on CanLii**
 
-==Result: placed No. 5 out of 19 teams==
+**Result: placed No. 5 out of 19 teams**
 
 In this moot court brief, I, alongside my co-counsel, Julia Pidutti, wrote the legal briefs on the side of plaintiff and defendant. This showcases excellent legal research, legal synthesis, and legal analysis.
 
 ## 05. BUSS 1000 Case Study on Blue Scope
 
-==Business report writing==
+**Business report writing**
 
 I analyzed using the **Corporate Social Responsibility** (CSV) and **Porter's Five Forces** (P5F) framework.
 
 ## 06. BUSS 1000 OMO Presentation
 
-==Business report presentation==
+**Business report presentation**
 
 I led a team of five, conducting **strategic diamond** analysis on the profitability of OMO, a laundry detergent brand, and gave concrete business recommendations.
 
 ## 07 DATA 1901 Graph_summary_playground
 
-==R, graphical analysis==
+**R, graphical analysis**
 
 ![ua1aUa5](https://i.imgur.com/ua1aUa5.png)
 
 ## 08 DATA 1901 Energy report
 
-==R, report writing, graphical analysis==
+**R, report writing, graphical analysis**
