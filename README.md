@@ -1,5 +1,7 @@
 # Brandon Lu's personal portfolio for data science and report writing
 
+The link is: [https://github.com/Brandon-z-lu/Data-Science-Projects](https://github.com/Brandon-z-lu/Data-Science-Projects)
+
 - [Brandon Lu's personal portfolio for data science and report writing](#brandon-lus-personal-portfolio-for-data-science-and-report-writing)
 	- [00. DATA 1901 Sydney housing prices (R, Python, webscrapping, graphical analysis, report writing)](#00-data-1901-sydney-housing-prices-r-python-webscrapping-graphical-analysis-report-writing)
 	- [01. ECON 302 HW2ExploringModel (R, Graphical Analysis, Macroeconomic Analysis)](#01-econ-302-hw2exploringmodel-r-graphical-analysis-macroeconomic-analysis)
