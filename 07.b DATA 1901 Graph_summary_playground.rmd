@@ -1,0 +1,60 @@
+```{r}
+library(ggplot2)
+
+generate_trend <- function(start, mean, sd, typeOfEnergy, n = 27) {
+  values <- rnorm(n, mean = mean, sd = sd)
+
+  trend <- cumsum(values)
+  trend <- pmax(trend + start, 0)
+
+  df <- data.frame(
+    year = 2023:(2023 + n - 1),
+    capacity = trend,
+    typeOfEnergy = rep(typeOfEnergy, n)
+  )
+
+  df$year <- paste(df$year, df$year + 1, sep = "-")
+
+  return(df)
+}
+
+df1 <- generate_trend(20, -2, 0.5, "Black coal", 27)
+df2 <- generate_trend(3, -0.5, 0.5, "Brown coal", 27)
+df3 <- generate_trend(2.7, -0.5, 0.5, "Gas", 27)
+df4 <- generate_trend(7, 0, 0.5, "Peaking gas and liquids", 27)
+df5 <- generate_trend(8, -0.10, 2, "Hydro", 27)
+df6 <- generate_trend(0, 2, 1, "Utility-scale storage", 27)
+df7 <- generate_trend(0, 2.3, 2, "Coordinated DER", 27)
+df8 <- generate_trend(0, 1, 1, "Distributed storage", 27)
+df9 <- generate_trend(8, 1, 5, "Wind", 27)
+df10 <- generate_trend(3, 2, 6, "Utility-scale solar", 27)
+df11 <- generate_trend(20, 2, 3, "Distrbuted PV", 27)
+
+df <- rbind(df1, df2, df3, df4, df5, df6, df7, df8, df9, df10, df11)
+
+print(df)
+
+library(dplyr)
+
+filter_conditions <- c("Black coal", "Brown coal", "Gas", "Peaking gas and liquids", "Hydro", "Utility-scale storage", "Coordinated DER")
+
+df_filtered <- filter(df, typeOfEnergy %in% filter_conditions)
+
+sum_by_year <- group_by(df_filtered, year) %>%
+  summarize(capacity = sum(capacity))
+
+disposable_energy <- ungroup(sum_by_year) %>%
+  mutate(typeOfEnergy = "Disposable energy")
+
+print(disposable_energy)
+
+df$typeOfEnergy <- factor(df$typeOfEnergy, levels=c('Distrbuted PV', 'Utility-scale solar', 'Wind', 'Distributed storage', 'Coordinated DER', 'Utility-scale storage', 'Hydro', 'Peaking', 'Gas gas and liquids', 'Brown coal', 'Black coal'))
+
+ggplot(df, aes(x = year, y = capacity, fill = typeOfEnergy)) +
+  geom_bar(stat = "identity", position = "stack") +
+  geom_line(data = disposable_energy, aes(x = year, y = capacity, color = typeOfEnergy, group = 1), linewidth = 1, color = "black", linetype = "dashed") +
+  labs(x = "Year", y = "Capacity (GW)", fill = "Type of Energy", color = "Type of Energy") +
+  ggtitle("Forecast Capacity in the National Electricity Market") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+

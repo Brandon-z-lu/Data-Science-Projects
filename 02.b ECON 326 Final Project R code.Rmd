@@ -1,0 +1,241 @@
+---
+title: "ECON-project-experiment"
+output: html_document
+date: "2024-12-13"
+---
+
+# Importing the file and data
+```{r}
+library(dplyr)
+library(geojsonio)
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(tidyverse)
+library(haven)
+library(vtable)
+library(viridis)
+library(geojsonio)
+library(sp)
+library(sf)
+library(cancensus)
+library(stargazer)
+library(coefplot)
+library(rmarkdown)
+library(lmtest)
+library(car)
+library(sandwich)
+
+
+# Load the .rda files
+load("data_culture.rda")
+culture_data <- census_data_culture
+# head(census_data_culture, nrow=50)
+# glimpse(census_data_culture)
+# summary(census_data_culture)
+# nrow(census_data_culture)
+# ncol(census_data_culture)
+```
+
+
+```{r}
+# Create a subset of the data with relevant variables and log-transform income statistics
+model_data <- census_data_culture %>%
+  select(
+    # Y variables
+    num_type_Museum.Gallery,
+    num_type_Cafe.Restaurant.Bar,
+    num_type_Other,
+    num_type_Educational,
+    num_type_Theatre.Performance,
+    num_type_Community.Space,
+    num_type_Studio.Rehearsal,
+    culture_contained_500,
+    
+    # X variables
+    v_CA21_251..65.years.and.over,
+    v_CA21_546..With.children,
+    v_CA21_906..Median.total.income.of.household.in.2020....,
+    v_CA21_560..Median.total.income.in.2020.among.recipients....,
+    v_CA21_4917..Total...Ethnic.or.cultural.origin.for.the.population.in.private.households,
+    v_CA21_5817..Total...Highest.certificate..diploma.or.degree.for.the.population.aged.15.years.and.over.in.private.households,
+    v_CA21_965..Median.total.income.of.economic.family.in.2020....,
+    v_CA21_5826..Postsecondary.certificate..diploma.or.degree,
+    v_CA21_6..Population.density.per.square.kilometre,
+    Population
+  ) %>%
+  mutate(
+    Log_Median_Household_Income = log(v_CA21_906..Median.total.income.of.household.in.2020....),
+    Log_Median_Recipient_Income = log(v_CA21_560..Median.total.income.in.2020.among.recipients....),
+    Log_Median_Family_Income = log(v_CA21_965..Median.total.income.of.economic.family.in.2020....),
+    TenMinusFour_Meidan_Household_Income = (v_CA21_906..Median.total.income.of.household.in.2020....) * (1/10000)
+  )
+
+summary(model_data)
+
+# Rename columns for easier use
+colnames(model_data) <- c(
+  # Y variables
+  "Museum_Gallery",
+  "Cafe_Restaurant_Bar",
+  "Other",
+  "Educational",
+  "Theatre_Performance",
+  "Community_Space",
+  "Studio_Rehearsal",
+  "Total_Culture_Spaces",
+  
+  # X variables
+  "Age65",
+  "Kids",
+  "Income",
+  "Median_Recipient_Income",
+  "Ethnic_Origin",
+  "Highest_Certificate",
+  "Median_Family_Income",
+  "Postsecondary_Education",
+  "Population_Density",
+  "Population",
+  "NA",
+  
+  # Log-transformed income
+  "Log_Income",
+  "Log_Median_Recipient_Income",
+  "Log_Median_Family_Income",
+  "IncomeBy10000"
+)
+
+filter_population <- function(data, thresholds) {
+  filtered_data_list <- list()
+  for (thresh in thresholds) {
+    filtered_data_list[[paste0("Population_", thresh)]] <- data %>%
+      filter(Population <= thresh & Total_Culture_Spaces > 0)
+  }
+  
+# General filter for cultural spaces
+filtered_data_list$All_Culture <- data %>%
+  filter(Total_Culture_Spaces > 0)
+
+return(filtered_data_list)
+}
+
+# Define population thresholds
+thresholds <- c(500, 400, 300, 100, 0)
+filtered_data_list <- filter_population(model_data, thresholds)
+
+# Display structure of each filtered dataset
+lapply(filtered_data_list, str)
+# View summary of the data
+summary(model_data)
+```
+
+```{r}
+# Linear model with all pertaining variables
+lm1 <- lm(Total_Culture_Spaces ~ 
+                 Age65 + 
+                 Kids + 
+                 Income + 
+                 Postsecondary_Education + 
+                 Population_Density, 
+               data = model_data)
+
+lm2 <- lm(Total_Culture_Spaces ~ 
+                 Age65 + 
+                 Kids + 
+                 IncomeBy10000 + 
+                 Postsecondary_Education + 
+                 Population_Density, 
+               data = model_data)
+
+# Linear model excluding Age65
+lm3 <- lm(Total_Culture_Spaces ~ 
+                 Kids + 
+                 IncomeBy10000 + 
+                 Postsecondary_Education + 
+                 Population_Density, 
+                 data = model_data)
+
+# Linear model excluding v_CA21_546..With.children
+lm4 <- lm(Total_Culture_Spaces ~ 
+                 Age65 + 
+                 IncomeBy10000 + 
+                 Postsecondary_Education + 
+                 Population_Density, 
+                 data = model_data)
+
+# Linear model excluding Log_Income
+lm5 <- lm(Total_Culture_Spaces ~ 
+                 Age65 + 
+                 Kids + 
+                 Postsecondary_Education + 
+                 Population_Density, 
+                 data = model_data)
+
+# Linear model excluding Postsecondary_Education
+lm6 <- lm(Total_Culture_Spaces ~ 
+                 Age65 + 
+                 Kids + 
+                 IncomeBy10000 + 
+                 Population_Density, 
+                 data = model_data)
+
+# Linear model excluding Population_Density
+lm7 <- lm(Total_Culture_Spaces ~ 
+                Age65 + 
+                Kids + 
+                IncomeBy10000 + 
+                Postsecondary_Education, 
+                data = model_data)
+
+# Display summaries of all models
+# summary(lm_with_all)
+# summary(lm_with_all_Without_Log)
+# summary(lm_without_Age65)
+# summary(lm_without_Kids)
+# summary(lm_without_Log_Income)
+# summary(lm_without_Postsecondary_Education)
+# summary(lm_without_Population_Density)
+  
+stargazer(lm1, lm2, lm3, lm4, lm5, lm6, lm7,
+          type = "text",
+          out = "table.txt")
+```
+
+```{r}
+vif(lm1) 
+vif(lm2) 
+vif(lm3) 
+vif(lm4) 
+vif(lm5) 
+vif(lm6) 
+vif(lm7)  
+# vif(lm8)
+
+
+bptest(lm1, varformula = NULL, studentize = TRUE, data = list(), weights = NULL)
+bptest(lm2, varformula = NULL, studentize = TRUE, data = list(), weights = NULL)
+bptest(lm3, varformula = NULL, studentize = TRUE, data= list(), weights = NULL)
+bptest(lm4, varformula = NULL, studentize = TRUE, data = list(), weights = NULL)
+bptest(lm5, varformula = NULL, studentize = TRUE, data = list(), weights = NULL)
+bptest(lm6, varformula = NULL, studentize = TRUE, data = list(), weights = NULL)
+bptest(lm7, varformula = NULL, studentize = TRUE, data = list(), weights = NULL)
+# bptest(lm8, varformula = NULL, studentize = TRUE, data = list(), weights = NULL)
+
+se1 <- sqrt(diag(vcovHC(lm1, type = "HC1")))
+se2 <- sqrt(diag(vcovHC(lm2, type = "HC1")))
+se3 <- sqrt(diag(vcovHC(lm3, type = "HC1")))
+se4 <- sqrt(diag(vcovHC(lm4, type = "HC1")))
+se5 <- sqrt(diag(vcovHC(lm5, type = "HC1")))
+se6 <- sqrt(diag(vcovHC(lm6, type = "HC1")))
+se7 <- sqrt(diag(vcovHC(lm7, type = "HC1")))
+print(se1)
+print(se2)
+print(se3)
+print(se4)
+print(se5)
+print(se6)
+print(se7)
+```
+
+
+

@@ -1,0 +1,238 @@
+---
+title: "NEM Electricity Market Report"
+author: "SID: 520649749"
+subtitle: "Project 3"
+date: "The University of Sydney | DATA1901 | May 2023"
+output:
+  html_document:
+    fig_caption: yes
+    number_sections: yes
+    self_contained: yes
+    theme: journal
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    code_folding: hide
+---
+
+# Client identification
+
+Australian Energy Market Commission (AEEC) (https://www.aemc.gov.au) is interested in:
+
+- What is the relationship between the demand and temperature in Australia?
+- How does the demand drive prices?
+
+# Recommendation
+
+- The relationship between the demand and temperature for each state
+    - Quadratic regression analysis 
+    - The demand for electricity is higher at the warm or cold extremes, with a lower demand observed at moderate temperatures.
+
+- The relationship between the prices and demand for each state
+    - Linear regression analysis
+    - The price-temperature demand relationship in Queensland is relatively insignificant, with the linear relationship being even inverse
+    - South Australia has the weakest correlation of $0.283$, while the correlation of other states hover around $0.4$
+- AEEC is advised to examine the abnormal electricity market in Queensland and South Australia. At the same time, as global warming raises the earth's temperature, AEEC can consider if the demand for electricity will increase in the future.
+
+# Evidence
+
+```{r}
+# Read the CSV file
+data <- read.csv("electricity.csv")
+
+# str(data)
+# 
+# tail(data)
+```
+
+## The relationship between demand and temperature
+
+```{r, message = FALSE}
+library(ggplot2)
+library(dplyr)
+
+# Calculate the demand as the sum of specific columns
+data$demand <- rowSums(data[, c("Battery..Charging.....GWh", "Exports....GWh", "Imports....GWh", "Coal....GWh", "Gas....GWh", "Battery..Discharging.....GWh", "Hydro....GWh", "Wind....GWh", "Solar....GWh", "Pumps....GWh", "Distillate....GWh", "Bioenergy....GWh")], na.rm = TRUE)
+
+# Select the relevant columns from the data frame
+demand <- data$demand
+temperature <- data$Temperature.Mean...C
+state <- data$state
+
+# Create a data frame for plotting
+df <- data.frame(temperature = temperature, demand = demand, state = state)
+
+# Calculate the correlation coefficient for each state
+correlation <- df %>%
+  group_by(state) %>%
+  summarise(correlation = cor(demand, temperature))
+
+# Print the correlation coefficient for each state
+# print(correlation)
+
+# Quadratic Regression Analysis
+quadratic_model <- lm(demand ~ temperature + I(temperature^2), data = df)
+# summary(quadratic_model)
+
+# Visualization
+ggplot(df, aes(x = temperature, y = demand, color = state)) +
+  geom_point() +
+  stat_smooth(method = "lm", formula = y ~ x + I(x^2), se = FALSE) +
+  xlab("Temperature (Mean)") +
+  ylab("Demand (GWh)") +
+  ggtitle("Demand vs. Temperature with Quadratic Regression Line")
+```
+
+The analysis was conducted on a comprehensive dataset containing information on electricity demand, temperature, and other variables. The graph is filtered according to different states. From the observation, we can see that the graph itself is not linear. This is why we employed a quadratic model to conduct the regression analysis. This suggests that extreme temperatures, both hot and cold, contribute to higher electricity demand. The quadratic regression model provided a better fit to the data, capturing the non-linear relationship between demand and temperature accurately.
+
+We can see that the demand is higher for both ends and lower in the middle. The state of NSW shows the most significant trend, perhaps due to its large population (Australian Bureau of Statistics, 2022).
+
+## The relationship between the prices and demand
+
+### Scatter plot and linear modelling
+
+```{r}
+library(ggplot2)
+
+# Select the relevant columns from the data frame
+demand <- data$demand
+prices <- data$Volume.Weighted.Price...AUD.MWh
+temperature <- data$Temperature.Mean...C
+state <- data$state
+
+# Create a data frame for plotting
+df <- data.frame(demand = demand, prices = prices, temperature = temperature, state = state)
+
+# Linear Regression Model
+linear_model <- lm(prices ~ demand, data = df)
+
+# Graph: Demand vs. Prices with Linear Regression Line and Different Colors for States
+ggplot(df, aes(x = demand, y = prices, color = state)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, formula = y ~ x) +
+  xlab("Demand (GWh)") +
+  ylab("Prices (AUD/MWh)") +
+  ggtitle("Prices vs. Demand with Linear Regression Line and Different Colors for States")
+```
+
+The graph illustrates the relationship between electricity demand and prices in Australia. The linear regression line depicts the overall trend, showing that higher demand corresponds to higher prices. Different colors represent different states.
+
+### Table of summary
+
+```{r, results="hide"}
+library(ggplot2)
+library(dplyr)
+
+# Select the relevant columns from the data frame
+demand <- data$demand
+prices <- data$Volume.Weighted.Price...AUD.MWh
+temperature <- data$Temperature.Mean...C
+state <- data$state
+
+# Create a data frame for plotting
+df <- data.frame(demand = demand, prices = prices, temperature = temperature, state = state)
+
+# Calculate the correlation coefficient for each state
+correlation <- df %>%
+  group_by(state) %>%
+  summarise(correlation = cor(prices, demand))
+
+# Print the correlation coefficient for each state
+print(correlation)
+```
+
+```{r, results="hide"}
+library(ggplot2)
+library(dplyr)
+
+# Select the relevant columns from the data frame
+demand <- data$demand
+prices <- data$Volume.Weighted.Price...AUD.MWh
+temperature <- data$Temperature.Mean...C
+state <- data$state
+
+# Create a data frame for plotting
+df <- data.frame(demand = demand, prices = prices, temperature = temperature, state = state)
+
+# List to store the linear regression models and hypothesis testing results for each state
+linear_models <- list()
+hypothesis_tests <- list()
+
+# Perform linear regression and hypothesis testing for each state
+states <- unique(df$state)
+for (state in states) {
+  # Subset data for the current state
+  state_data <- df[df$state == state, ]
+  
+  # Perform linear regression
+  linear_model <- lm(prices ~ demand, data = state_data)
+  linear_models[[state]] <- linear_model
+  
+  # Perform hypothesis testing
+  hypothesis_test <- summary(linear_model)
+  hypothesis_tests[[state]] <- hypothesis_test
+}
+
+# Print the linear regression models and hypothesis testing results for each state
+for (state in states) {
+  cat("State:", state, "\n")
+  cat("Linear Regression Model:\n")
+  print(linear_models[[state]])
+  cat("\nHypothesis Testing Results:\n")
+  print(hypothesis_tests[[state]])
+  cat("\n")
+}
+```
+
+| State           | Correlation | p-value    |
+|-----------------|-------------|------------|
+| Victoria        | 0.474       | 0.0003325  |
+| New South Wales | 0.469       | 0.000393   |
+| Queensland      | -0.0592     | 0.674      |
+| South Australia | 0.283       | 0.0403     |
+| Tasmania        | 0.516       | 7.74e-05   |
+
+The table provides the correlation coefficients and corresponding p-values for the relationship between demand and prices in different states of Australia (Markdown Guide, n.d.). The correlation coefficient measures the strength and direction of the linear relationship between demand and prices. The p-value indicates the statistical significance, helping to determine whether the observed relationship is likely to occur by chance.
+
+In Victoria, there is a moderate positive correlation between demand and prices, with a correlation coefficient of 0.474. The p-value of 0.0003325 indicates strong evidence against the null hypothesis of no relationship, suggesting that the observed correlation is statistically significant.
+
+Similarly, New South Wales shows a similar pattern with a correlation coefficient of 0.469 and a p-value of 0.000393. The positive correlation suggests that an increase in demand is associated with higher prices in these states.
+
+On the other hand, Queensland exhibits a weak negative correlation (-0.0592) between demand and prices, although the p-value of 0.674 indicates that this correlation is not statistically significant. This means that there is insufficient evidence to support a relationship between demand and prices in Queensland.
+
+South Australia shows a moderate positive correlation (0.283) with a p-value of 0.0403, indicating a statistically significant relationship between demand and prices.
+
+Finally, Tasmania demonstrates a strong positive correlation (0.516) with a very low p-value of 7.74e-05, providing strong evidence of a significant relationship between demand and prices.
+
+# Acknowledgement
+
+Australian Bureau of Statistics. (2022, September). *National, state and territory population*. ABS. Retrieved May 24, 2023, from https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population/latest-release.
+
+Markdown Guide (n.d.). *Extended Syntax: Markdown Guide*. Markdown Guide. Retrieved May 24, 2023, from https://www.markdownguide.org/extended-syntax/‌
+
+# Appendix
+
+## Client
+
+- Decision
+       - To align with the theme of the data set, the clients should be interested in macroeconomics, constantly alerted by imports and exports, supply and demands. Thus, the AEEC is chosen.
+- Effect on the report
+    - This report emphasises the price element and mentions the effect of temperature on demand to cater to its economic background.
+
+## Statistical Analysis
+
+- Modelling:
+    - Demand-Temperature: Quadratic model due to non-linear scatterplot pattern.
+    - Price-Demand: A linear model to apply regression testing, aligns with economic theories of supply and demand.
+- Hypothesis Testing (Price-Demand):
+    - H: $H_0: \beta = 0$ (no relationship), $H_1: \beta \neq 0$ (there's a relationship).
+    - A: Residuals are homoscedastic, independent and normal.
+    - T: Test statistic via $t$-value ($( \hat{\beta}-0)/SE$).
+    - P: Calculate the p-value from the t-distribution for each state.
+    - C: If p-value > 0.05, data aligns with $H_0$ (demand doesn't affect price).
+
+## Limitations
+
+- Lack of per capita demand data due to insufficient month-by-month population statistics by states.
+- Possible better models for the price-demand relationship than linear.
+- Need more background financial information for investigating Queensland's abnormal energy market behaviour.

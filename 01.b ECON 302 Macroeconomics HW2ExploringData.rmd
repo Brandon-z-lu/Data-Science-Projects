@@ -1,0 +1,185 @@
+---
+title: 'Homework 02: Exploring Data'
+author: 'Brandon Z. Lu'
+course: 'ECON 302 HW 2'
+output:
+  pdf_document: default
+  html_document: default
+---
+# Question 1
+```{r}
+library(dplyr) # install.packages("dplyr")
+library(ggplot2) # install.packages("ggplot2")
+library(scales) # install.packages("scales")
+library(tidyr) # install.packages("tidyr")
+library(haven) # install.packages("haven")
+library(fredr) # Loading the database from https://cran.r-project.org/web/packages/fredr/vignettes/fredr.html
+#install.packages("fredr")
+fredr_set_key("bdd1cf84197911e0b8c4346fdd943c50")
+# usethis::edit_r_environ()
+# FRED_API_KEY=bdd1cf84197911e0b8c4346fdd943c50
+```
+
+```{r}
+# https://fred.stlouisfed.org/series/RKNANPINA666NRUG
+capital_stock <- fredr(
+  series_id = "RKNANPINA666NRUG",
+  observation_start = as.Date("1970-01-01"),
+  observation_end = as.Date("2019-12-31")
+)
+
+head(capital_stock)
+```
+
+```{r}
+# https://fred.stlouisfed.org/series/EMPENGINA148NRUG
+persons_engaged <- fredr(
+  series_id = "EMPENGINA148NRUG",
+  observation_start = as.Date("1970-01-01"),
+  observation_end = as.Date("2019-12-31")
+)
+
+#https://fred.stlouisfed.org/series/AVHWPEINA065NRUG
+avg_hours_worked <- fredr(
+  series_id = "AVHWPEINA065NRUG",
+  observation_start = as.Date("1970-01-01"),
+  observation_end = as.Date("2019-12-31")
+)
+
+head(persons_engaged)
+head(avg_hours_worked)
+```
+
+```{r}
+# https://fred.stlouisfed.org/series/RGDPNAINA666NRUG
+real_gdp <- fredr(
+  series_id = "RGDPNAINA666NRUG",
+  observation_start = as.Date("1970-01-01"),
+  observation_end = as.Date("2019-12-31")
+)
+
+head(real_gdp)
+```
+
+```{r}
+# Rename 'value' columns for clarity
+real_gdp <- real_gdp %>% rename(gdp = value)
+capital_stock <- capital_stock %>% rename(capital = value)
+persons_engaged <- persons_engaged %>% rename(persons = value)
+avg_hours_worked <- avg_hours_worked %>% rename(hours = value)
+
+# Merge datasets
+merged_data_india <- real_gdp %>%
+  inner_join(capital_stock, by = "date") %>%
+  inner_join(persons_engaged, by = "date") %>%
+  inner_join(avg_hours_worked, by = "date")
+
+merged_data_india <- merged_data_india %>%
+  mutate(labor = persons * hours)
+
+alpha <- 0.33
+
+merged_data_india <- merged_data_india %>%
+  mutate(
+    tfp = gdp / (capital^alpha * labor^(1 - alpha))
+  )
+```
+
+Assuming a Cobb-Douglas production function with $\alpha$= 0.33, find and plot the Solow residual of the Indian economy. Are there any patterns that catch your attention in that plot?
+
+```{r}
+ggplot(merged_data_india, aes(x = date, y = tfp)) +
+  geom_line(color = "blue") +
+  labs(
+    title = "Solow Residual (Total Factor Productivity) for India (1970-2019)",
+    x = "Year",
+    y = "Solow residual (TFP)"
+  ) +
+  scale_x_date(date_breaks = "3 years", date_labels = "%Y")
+  # theme_minimal()
+```
+
+1. Gradual increase before 1990: the slope rate is low and the growth is slow.
+
+2. Fast sustained increase after 1991: might be correlated to the economic reform leading to an increase technology adoption, innovation, which increase the TFP (Singer, 1978).
+	
+3. Some fluctuations around 2007-2010: the stagnation of growth of TFP is likely due to the global financial crisis.
+
+# Question 02
+```{r}
+Maddison_data <- read_dta("maddison2023_web.dta")
+# MPD version 2023: Bolt, Jutta and Jan Luiten van Zanden (2024). Maddison style estimates of the evolution of the world economy: A new 2023 update. Journal of Economic Surveys, 1–41. DOI: 10.1111/joes.12618
+```
+
+## Geary-Khamis dollar definition
+Geary-Khamis dollar is a type of dollar that has the same amount of PPP as US Dollars in the US at a given point of time (Bolt, 2024). For example, people use the 1990 and 2016 USD as the standard of reference. The PPP as the basis of comparison is key here because it standardizes the currency by examining the same bundle of goods in different countries.
+
+## Plot GDP per capita
+Plot GDP per capita for Belgium, Malaysia and Indonesia since 1950 (use just one graph for the three countries to be able to compare them).
+```{r}
+head(Maddison_data)
+
+# Filter the data for Belgium, Malaysia, and Indonesia since 1950
+filtered_Maddison_data <- Maddison_data %>%
+  filter(country %in% c("Belgium", "Malaysia", "Indonesia"), year >= 1950)
+
+# Plot GDP per capita for the three countries
+ggplot(filtered_Maddison_data, aes(x = year, y = gdppc, color = country)) +
+  geom_line(size = 1) +
+  labs(title = "GDP per capita of the three countries (1950-Present)",
+       x = "Year",
+       y = "GDP per capita",
+       color = "Country") +
+  scale_x_continuous(breaks = seq(1950, 2025, by = 5)) +
+  theme_minimal()
+```
+
+## Catch-up growth
+Assume that GDP per capita in all three countries will continue to grow at the average growth rate they have experienced during the last 10 years of available data. How long will it take for Malaysia and Indonesia to catch up with Belgium in terms of GDP per capita? Detail the steps you take and discuss your results.
+```{r}
+# Filter the data for the last 10 years
+last_10_years <- Maddison_data %>%
+  filter(year >= 2022-9) %>%
+  filter(country %in% c("Belgium", "Malaysia", "Indonesia"))
+
+# Compute the average annual growth rate (avg_growth_rate) for each country
+growth_rates <- last_10_years %>%
+  group_by(country) %>%
+  summarize(
+    gdp_initial = first(gdppc),
+    gdp_final = last(gdppc),
+    avg_growth_rate = (gdp_final / gdp_initial)^(1/10) - 1
+  )
+
+# Get the most recent GDP per capita for each country
+latest_gdp <- Maddison_data %>%
+  filter(year == max(year), country %in% c("Belgium", "Malaysia", "Indonesia")) %>%
+  select(country, gdppc)
+
+# Merge growth rates with latest GDP data
+growth_rates <- left_join(growth_rates, latest_gdp, by = "country")
+
+# Belgium's GDP per capita (target)
+gdp_belgium <- growth_rates %>% filter(country == "Belgium") %>% pull(gdppc)
+
+# Function:
+# Input: gdp_start, gdp_target, gdp_growth_rate
+# Output: catchup_time
+catchup_time <- function(gdp_start, growth_rate, gdp_target) {
+  log(gdp_target / gdp_start) / log(1 + growth_rate)
+}
+
+# Compute the catch-up time required
+func_catchup_years <- growth_rates %>%
+  filter(country %in% c("Malaysia", "Indonesia")) %>%
+  mutate(years_to_catch_up = catchup_time(gdppc, avg_growth_rate, gdp_belgium))
+
+print(func_catchup_years)
+```
+
+Therefore, although the year-on-year growth rates for Indonesia and Malasia are similar, because Indonesia's initial GDP per capita was so low at \$9676 compared to \$20819 in Malaysia, the catch-up growth for Indonesia (42.34 years) will be much longer than that of Malaysia (18.39 years).
+
+# References
+Bolt, J. (2024). Maddison‐style estimates of the evolution of the world economy: A new 2023 update. Journal of Economic Surveys, 39(2), 631-671. https://doi.org/10.1111/joes.12618
+
+Singer, H. W. (1978). Foreign trade regimes and economic development: India : Jagdish N. bhagwati and T.N. srinivasan, (national bureau of economic research, new york, 1975-distributed by columbia university press) pp. xxiv + 261, $15.00. Elsevier B.V. https://doi.org/10.1016/0022-1996(78)90011-9
