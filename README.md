@@ -24,6 +24,8 @@
 
 **R, Python, Zsh command-line, web-scrapping, graphical analysis, regression analysis, report writing**
 
+**Result: obtained a 100% on this project**
+
 ```
 .
 ├── 0.1.get_suburbs.py
