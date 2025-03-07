@@ -1,5 +1,17 @@
 # Brandon Lu's personal portfolio for data science and report writing
 
+- [Brandon Lu's personal portfolio for data science and report writing](#brandon-lus-personal-portfolio-for-data-science-and-report-writing)
+	- [00. DATA 1901 Command-Line Python script automation](#00-data-1901-command-line-python-script-automation)
+	- [01. ECON 302 HW2ExploringModel.pdf](#01-econ-302-hw2exploringmodelpdf)
+	- [02. ECON 326 Final Project](#02-econ-326-final-project)
+	- [03. POLI 101 Final Paper final v](#03-poli-101-final-paper-final-v)
+	- [04. Moot Court 2025 UBC](#04-moot-court-2025-ubc)
+	- [05. BUSS 1000 Case Study on Blue Scope](#05-buss-1000-case-study-on-blue-scope)
+	- [06. BUSS 1000 OMO Presentation](#06-buss-1000-omo-presentation)
+	- [07 DATA 1901 Graph\_summary\_playground](#07-data-1901-graph_summary_playground)
+	- [08 DATA 1901 Energy report](#08-data-1901-energy-report)
+
+
 ```
 .
 ├── 00. DATA 1901 Command-Line Python script automation # R, Python, Zsh command-line, web-scrapping, graphical analysis, regression analysis, report writing
